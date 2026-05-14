@@ -8,6 +8,12 @@ class UserCreate(BaseModel):
     voice_mode: str = Field(default="clean_retail", pattern="^(professional|clean_retail|market_homie|atl_homie)$")
 
 
+class SubscribeRequest(BaseModel):
+    name: str = "SmokeSignal User"
+    phone_number: str
+    voice_mode: str = Field(default="atl_homie", pattern="^(professional|clean_retail|market_homie|atl_homie)$")
+
+
 class TestSmsRequest(BaseModel):
     phone_number: str
     message: str
