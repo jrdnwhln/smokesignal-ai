@@ -2,6 +2,7 @@ from app.signal_engine import calculate_confluence_score, get_priority
 from app.ai_writer import generate_alert_text
 from app.intelligence import agent_state, build_operator_briefing, intelligence_status
 from app.market_reader import read_market
+from app.market_senses import build_market_senses
 from app.strategy_engine import strategy_status
 
 
@@ -92,4 +93,20 @@ def test_market_reader_returns_regime_and_safe_text():
     read = read_market("twin")
     assert "regime" in read
     assert "asset_summaries" in read
+    assert "market_senses" in read
     assert "Not financial advice. Market alerts only." in read["read_text"]
+
+
+def test_market_senses_returns_alternative_pressure_signals():
+    senses = build_market_senses("twin")
+    assert senses["phase"]
+    assert 0 <= senses["indexes"]["gain_pressure"] <= 100
+    assert 0 <= senses["indexes"]["crash_pressure"] <= 100
+    assert "cross-asset confirmation" in senses["alternative_signals"]
+    assert "Not financial advice. Market alerts only." in senses["briefing"]
+
+
+def test_intelligence_briefing_includes_market_senses():
+    briefing = build_operator_briefing("normal_clanka")
+    assert "market_senses" in briefing
+    assert "phase" in briefing["market_senses"]
