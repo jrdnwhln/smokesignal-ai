@@ -5,6 +5,7 @@ from app.news_scanner import detect_news_catalyst, get_recent_headlines, score_n
 DEFAULT_WATCHLIST = {
     "stocks": ["SPY", "QQQ", "NVDA", "TSLA", "AMD", "AAPL", "META"],
     "crypto": ["BTC", "ETH", "SOL", "XRP"],
+    "forex": ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", "USDCAD"],
 }
 
 
@@ -12,6 +13,8 @@ def get_asset_type(symbol: str) -> str:
     symbol = symbol.upper()
     if symbol in DEFAULT_WATCHLIST["crypto"]:
         return "crypto"
+    if symbol in DEFAULT_WATCHLIST["forex"]:
+        return "forex"
     return "stock"
 
 
