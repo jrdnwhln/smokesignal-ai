@@ -44,3 +44,9 @@ def test_forex_symbol_returns_forex_asset_type():
     alert = calculate_confluence_score("EURUSD")
     assert alert["asset_type"] == "forex"
     assert 0 <= alert["score"] <= 10
+
+
+def test_stock_symbol_returns_stock_asset_type():
+    alert = calculate_confluence_score("NVDA")
+    assert alert["asset_type"] == "stock"
+    assert 0 <= alert["score"] <= 10
