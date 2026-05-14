@@ -4,6 +4,7 @@ from collections import Counter
 from typing import Any
 
 from app.ai_writer import normalize_voice_mode
+from app.market_senses import build_market_senses
 from app.signal_engine import DEFAULT_WATCHLIST, calculate_confluence_score
 
 
@@ -149,6 +150,7 @@ def read_market(voice_mode: str = "normal_clanka") -> dict[str, Any]:
         ],
         "dominant_strategy": _dominant_strategy(alerts),
         "source_flow": _source_flow(alerts),
+        "market_senses": build_market_senses(voice_mode),
         "disclaimer": "Not financial advice. Market alerts only.",
     }
     read["read_text"] = _build_read_text(read, voice_mode)
