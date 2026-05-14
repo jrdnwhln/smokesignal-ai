@@ -21,6 +21,7 @@ class Settings:
     TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
     TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "")
     SMS_ENABLED = os.getenv("SMS_ENABLED", "false").lower() == "true"
+    HOURLY_UPDATES_ENABLED = os.getenv("HOURLY_UPDATES_ENABLED", "false").lower() == "true"
 
 
 settings = Settings()
