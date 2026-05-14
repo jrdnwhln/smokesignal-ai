@@ -9,6 +9,15 @@ def test_subscribe_page_loads():
 
     assert response.status_code == 200
     assert "Start SMS Alerts" in response.text
+    assert "/static/smokesignal-logo.png" in response.text
+
+
+def test_subscription_logo_asset_loads():
+    with TestClient(app) as client:
+        response = client.get("/static/smokesignal-logo.png")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
 
 
 def test_subscribe_json_seeds_watchlist_and_unsubscribes():
