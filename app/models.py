@@ -5,7 +5,7 @@ class UserCreate(BaseModel):
     name: str
     phone_number: str
     sms_enabled: bool = False
-    voice_mode: str = Field(default="clean_retail", pattern="^(professional|clean_retail|market_homie)$")
+    voice_mode: str = Field(default="clean_retail", pattern="^(professional|clean_retail|market_homie|atl_homie)$")
 
 
 class TestSmsRequest(BaseModel):
