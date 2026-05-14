@@ -2,6 +2,7 @@ from typing import Any
 
 from app.config import settings
 from app.database import save_alert
+from app.intelligence import observe_alert
 
 
 def print_alert(alert_text: str) -> None:
@@ -53,6 +54,7 @@ def process_alert(alert: dict[str, Any], alert_text: str) -> dict[str, Any]:
     """Print and save the alert. SMS can be layered on per opted-in user later."""
     alert_to_save = {**alert, "alert_text": alert_text}
     saved_alert = save_alert(alert_to_save)
+    observe_alert(alert_to_save)
 
     if alert["should_alert"]:
         print_alert(alert_text)
