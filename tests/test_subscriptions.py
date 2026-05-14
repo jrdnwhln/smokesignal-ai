@@ -28,7 +28,7 @@ def test_subscribe_json_seeds_watchlist_and_unsubscribes():
             json={
                 "name": "Test User",
                 "phone_number": phone_number,
-                "voice_mode": "atl_homie",
+                "voice_mode": "twin",
             },
         )
         data = subscribe_response.json()
