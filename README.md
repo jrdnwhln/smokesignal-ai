@@ -1,13 +1,15 @@
 # SmokeSignal AI
 
-SmokeSignal AI is a local desktop backend prototype for an AI-powered market alert system. It monitors a default watchlist of stocks and crypto, checks mock market data and mock headlines, calculates a Confluence Score from 0 to 10, writes short alert messages in different voice modes, saves alerts to SQLite, and exposes local FastAPI routes for testing.
+SmokeSignal AI is a local desktop backend prototype for an AI-powered market alert system. It monitors a default watchlist of stocks and crypto, checks market data and mock headlines, calculates a Confluence Score from 0 to 10, writes short alert messages in different voice modes, saves alerts to SQLite, and exposes local FastAPI routes for testing.
 
 ## What SmokeSignal AI Does
 
 - Tracks a default watchlist of stocks and crypto.
-- Pulls mock market data and mock news headlines.
+- Pulls live crypto market data from CoinGecko when available.
+- Falls back to mock market data if a live data source is unavailable.
+- Pulls mock news headlines.
 - Scores price movement, volume, volatility, news catalysts, and sentiment.
-- Generates alert text in Professional, Clean Retail, or Market Homie voice.
+- Generates alert text in Professional, Clean Retail, Market Homie, or ATL Homie voice.
 - Saves alerts to a local SQLite database.
 - Prints alerts to the terminal.
 - Provides FastAPI routes for local testing.
@@ -59,7 +61,7 @@ copy .env.example .env
 
 ## Configure `.env`
 
-The MVP runs without API keys because it uses mock data by default.
+The MVP runs without API keys. Crypto data tries CoinGecko first, then falls back to mock data. Stock data and news are still mock-first.
 
 ```env
 APP_ENV=development
@@ -122,6 +124,12 @@ Try a different voice mode:
 http://127.0.0.1:8000/scan/NVDA?voice_mode=market_homie
 ```
 
+Try ATL Homie voice:
+
+```text
+http://127.0.0.1:8000/scan/BTC?voice_mode=atl_homie
+```
+
 ## Test Alert Generation
 
 Run tests:
@@ -162,7 +170,7 @@ SMS should never be sent to users who have not opted in. The MVP saves and print
 
 ### Phase 1
 
-Local mock data MVP.
+Local mock data MVP plus live crypto data fallback.
 
 ### Phase 2
 
