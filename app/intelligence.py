@@ -117,6 +117,7 @@ def run_autonomous_cycle(voice_mode: str = "twin") -> dict[str, Any]:
     init_db()
     voice = normalize_voice_mode(voice_mode)
 
+    # Local imports avoid circular dependencies with alert processing.
     from app.alert_sender import process_alert
     from app.ai_writer import generate_alert_text
     from app.signal_engine import DEFAULT_WATCHLIST, calculate_confluence_score
@@ -208,6 +209,9 @@ def build_operator_briefing(voice_mode: str = "normal_clanka") -> dict[str, Any]
     voice = normalize_voice_mode(voice_mode)
     status = intelligence_status()
     focus = status["recent_focus"]
+    from app.market_senses import build_market_senses
+
+    senses = build_market_senses(voice_mode)
 
     if not focus:
         text = (
@@ -222,6 +226,7 @@ def build_operator_briefing(voice_mode: str = "normal_clanka") -> dict[str, Any]
             text = (
                 f"Twin, SmokeSignal up and on the grind. Get off yo ass, no excuse mode. Heat on the board: {leaders}. "
                 f"Source flow keep comin from {top_source}, method makin noise: {top_strategy}. "
+                f"Market senses callin it {senses['phase']} with crash pressure {senses['indexes']['crash_pressure']}/100. "
                 "Bag discipline, read the smoke, keep working while everybody sleep. "
                 "Not financial advice. Market alerts only."
             )
@@ -229,10 +234,12 @@ def build_operator_briefing(voice_mode: str = "normal_clanka") -> dict[str, Any]
             text = (
                 f"SmokeSignal AI is actively monitoring. Current focus: {leaders}. "
                 f"Most active recent source: {top_source}. Most observed method: {top_strategy}. "
+                f"Market senses: {senses['phase']} with crash pressure {senses['indexes']['crash_pressure']}/100. "
                 "Not financial advice. Market alerts only."
             )
 
     return {
         "briefing": text,
         "status": status,
+        "market_senses": senses,
     }
