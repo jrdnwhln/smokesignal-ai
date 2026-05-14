@@ -3,6 +3,7 @@ from threading import Thread
 from typing import Any
 
 from app.ai_writer import generate_alert_text
+from app.ai_writer import normalize_voice_mode
 from app.alert_sender import process_alert, send_sms_alert
 from app.database import get_sms_enabled_users, get_user_watchlist
 from app.signal_engine import DEFAULT_WATCHLIST, calculate_confluence_score
@@ -10,7 +11,7 @@ from app.signal_engine import DEFAULT_WATCHLIST, calculate_confluence_score
 _scheduler_thread: Thread | None = None
 
 
-def scan_all_once(voice_mode: str = "clean_retail") -> list[dict]:
+def scan_all_once(voice_mode: str = "normal_clanka") -> list[dict]:
     """Run one scan across the default watchlist."""
     alerts = []
     symbols = DEFAULT_WATCHLIST["stocks"] + DEFAULT_WATCHLIST["crypto"] + DEFAULT_WATCHLIST["forex"]
@@ -36,6 +37,12 @@ def build_hourly_digest(user: dict[str, Any], alerts: list[dict[str, Any]]) -> s
     top_alerts = actionable_alerts[:3]
 
     if not top_alerts:
+        voice_mode = normalize_voice_mode(user.get("voice_mode", "normal_clanka"))
+        if voice_mode == "atl_homie":
+            return (
+                "Twin, tape quiet right now. No WATCH or HIGH PRIORITY smoke on the board. "
+                "Stay off lazy mode, no excuse mode, keep ya eyes on the grind. Not financial advice. Market alerts only."
+            )
         return (
             "SmokeSignal hourly: no WATCH or HIGH PRIORITY signals right now. "
             "Markets still being monitored. Not financial advice. Market alerts only."
@@ -45,17 +52,20 @@ def build_hourly_digest(user: dict[str, Any], alerts: list[dict[str, Any]]) -> s
         f"{alert['symbol']} {alert['priority']} {alert['score']}/10"
         for alert in top_alerts
     ]
-    intro = "SmokeSignal hourly: " if user.get("voice_mode") != "atl_homie" else "Aye, hourly SmokeSignal: "
-    return f"{intro}" + " | ".join(parts) + ". Don't chase, stay sharp. Not financial advice. Market alerts only."
+    voice_mode = normalize_voice_mode(user.get("voice_mode", "normal_clanka"))
+    if voice_mode == "atl_homie":
+        return f"Twin, hourly smoke: " + " | ".join(parts) + ". Get off yo ass, no excuse mode, bag discipline only. Not financial advice. Market alerts only."
+    return f"SmokeSignal hourly: " + " | ".join(parts) + ". Don't chase, stay sharp. Not financial advice. Market alerts only."
 
 
 def send_hourly_update_to_user(user: dict[str, Any]) -> dict[str, Any]:
     """Scan a user's watchlist, save alerts, and send one opted-in SMS digest."""
     symbols = _symbols_for_user(user)
     alerts = []
+    voice_mode = normalize_voice_mode(user.get("voice_mode", "normal_clanka"))
     for symbol in symbols:
         alert = calculate_confluence_score(symbol)
-        alert_text = generate_alert_text(alert, user.get("voice_mode", "clean_retail"))
+        alert_text = generate_alert_text(alert, voice_mode)
         saved_alert = process_alert(alert, alert_text)
         alerts.append({**alert, "alert_text": alert_text, "database_id": saved_alert["id"]})
 
