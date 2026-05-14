@@ -21,6 +21,7 @@ SmokeSignal AI is a local desktop backend prototype for an AI-powered market ale
 - Tags scans with strategy methods such as momentum/news confluence, breakout confirmation, volatility expansion, catalyst watch, and mean-reversion caution.
 - Stores strategy observations locally so methods can be graded against future outcomes.
 - Reads the full market board and classifies the tape as risk-on, risk-off, chop, catalyst-driven, volatility expansion, or mixed.
+- Adds alternative market senses for breadth, crash pressure, gain pressure, uncertainty, dollar stress, leadership concentration, risk appetite divergence, and news theme clustering.
 - Saves alerts to a local SQLite database.
 - Prints alerts to the terminal.
 - Provides FastAPI routes for local testing.
@@ -181,6 +182,7 @@ You can also generate alerts through:
 - `POST /intelligence/activate`
 - `GET /strategies`
 - `GET /market/read`
+- `GET /market/senses`
 - `GET /alerts`
 
 Check recent source-backed articles for one symbol:
@@ -223,6 +225,12 @@ Read the full market tape:
 
 ```text
 http://127.0.0.1:8000/market/read?voice_mode=twin
+```
+
+Read alternative market pressure signals:
+
+```text
+http://127.0.0.1:8000/market/senses?voice_mode=twin
 ```
 
 ## SMS Subscription Flow
