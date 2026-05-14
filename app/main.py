@@ -1,4 +1,5 @@
 from urllib.parse import parse_qs
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
@@ -28,7 +29,8 @@ app = FastAPI(
     description="Local MVP market monitoring and alert engine. Not financial advice.",
     version="0.1.0",
 )
-app.mount("/static", StaticFiles(directory="static"), name="static")
+STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 @app.on_event("startup")
@@ -53,10 +55,8 @@ def watchlist() -> dict:
     return DEFAULT_WATCHLIST
 
 
-@app.get("/subscribe", response_class=HTMLResponse)
-def subscribe_page() -> str:
-    """Small local signup page for opted-in SMS alerts."""
-    return """
+def _subscription_page_html() -> HTMLResponse:
+    return HTMLResponse("""
     <!doctype html>
     <html lang="en">
       <head>
@@ -155,7 +155,19 @@ def subscribe_page() -> str:
         </main>
       </body>
     </html>
-    """
+    """)
+
+
+@app.get("/subscribe", response_class=HTMLResponse)
+def subscribe_page() -> HTMLResponse:
+    """Small local signup page for opted-in SMS alerts."""
+    return _subscription_page_html()
+
+
+@app.get("/join", response_class=HTMLResponse)
+def join_page() -> HTMLResponse:
+    """Fresh alias for the SMS signup page."""
+    return _subscription_page_html()
 
 
 def _decode_request_data(raw_body: bytes, content_type: str) -> dict:
