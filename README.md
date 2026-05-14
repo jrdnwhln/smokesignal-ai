@@ -9,10 +9,18 @@ SmokeSignal AI is a local desktop backend prototype for an AI-powered market ale
 - Pulls live crypto market data from CoinGecko when available.
 - Pulls live forex reference rates from Frankfurter when available.
 - Falls back to mock market data if a live data source is unavailable.
-- Pulls mock news headlines.
+- Pulls live public news headlines from Google News RSS when available.
+- Includes article source, URL, published time, and summary metadata for scoring context.
 - Scores price movement, volume, volatility, news catalysts, and sentiment.
 - Tracks stocks, crypto, and major forex pairs.
-- Generates alert text in Professional, Clean Retail, Market Homie, or ATL Homie voice.
+- Generates alert text in two public voice modes: `twin` and `normal clanka`.
+- Maintains a local intelligence memory of recent signals and recurring news sources.
+- Produces a personable operator briefing from what it has recently observed.
+- Can run an autonomous observe-think-speak cycle across the watchlist.
+- Can activate a background autonomous monitoring loop for local experiments.
+- Tags scans with strategy methods such as momentum/news confluence, breakout confirmation, volatility expansion, catalyst watch, and mean-reversion caution.
+- Stores strategy observations locally so methods can be graded against future outcomes.
+- Reads the full market board and classifies the tape as risk-on, risk-off, chop, catalyst-driven, volatility expansion, or mixed.
 - Saves alerts to a local SQLite database.
 - Prints alerts to the terminal.
 - Provides FastAPI routes for local testing.
@@ -64,7 +72,7 @@ copy .env.example .env
 
 ## Configure `.env`
 
-The MVP runs without API keys. Stock quotes try Stooq first, crypto data tries CoinGecko first, forex rates try Frankfurter first, then all fall back to mock data. News is still mock-first.
+The MVP runs without API keys. Stock quotes try Stooq first, crypto data tries CoinGecko first, forex rates try Frankfurter first, then all fall back to mock data. News uses public Google News RSS when available, then falls back safely when a source cannot be reached.
 
 ```env
 APP_ENV=development
@@ -132,25 +140,25 @@ http://127.0.0.1:8000/scan/NVDA
 Stock scans use free delayed quote data when available:
 
 ```text
-http://127.0.0.1:8000/scan/NVDA?voice_mode=atl_homie
+http://127.0.0.1:8000/scan/NVDA?voice_mode=twin
 ```
 
-Try a different voice mode:
+Try the professional-style voice:
 
 ```text
-http://127.0.0.1:8000/scan/NVDA?voice_mode=market_homie
+http://127.0.0.1:8000/scan/NVDA?voice_mode=normal_clanka
 ```
 
-Try ATL Homie voice:
+Try `twin` voice:
 
 ```text
-http://127.0.0.1:8000/scan/BTC?voice_mode=atl_homie
+http://127.0.0.1:8000/scan/BTC?voice_mode=twin
 ```
 
 Scan a forex pair:
 
 ```text
-http://127.0.0.1:8000/scan/EURUSD?voice_mode=atl_homie
+http://127.0.0.1:8000/scan/EURUSD?voice_mode=twin
 ```
 
 ## Test Alert Generation
@@ -165,7 +173,57 @@ You can also generate alerts through:
 
 - `GET /scan`
 - `GET /scan/{symbol}`
+- `GET /news/{symbol}`
+- `GET /intelligence/status`
+- `GET /intelligence/briefing`
+- `GET /intelligence/state`
+- `POST /intelligence/cycle`
+- `POST /intelligence/activate`
+- `GET /strategies`
+- `GET /market/read`
 - `GET /alerts`
+
+Check recent source-backed articles for one symbol:
+
+```text
+http://127.0.0.1:8000/news/NVDA
+```
+
+Check what the local intelligence has learned from recent scans:
+
+```text
+http://127.0.0.1:8000/intelligence/status
+```
+
+Get a personable briefing:
+
+```text
+http://127.0.0.1:8000/intelligence/briefing?voice_mode=twin
+```
+
+Run one autonomous intelligence cycle:
+
+```powershell
+Invoke-RestMethod -Method Post "http://127.0.0.1:8000/intelligence/cycle?voice_mode=twin"
+```
+
+Activate the local autonomous loop:
+
+```powershell
+Invoke-RestMethod -Method Post "http://127.0.0.1:8000/intelligence/activate?interval_minutes=5&voice_mode=twin"
+```
+
+Inspect the strategy library and what SmokeSignal has observed:
+
+```text
+http://127.0.0.1:8000/strategies
+```
+
+Read the full market tape:
+
+```text
+http://127.0.0.1:8000/market/read?voice_mode=twin
+```
 
 ## SMS Subscription Flow
 
