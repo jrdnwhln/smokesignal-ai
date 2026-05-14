@@ -4,10 +4,26 @@ from app.config import settings
 DISCLAIMER = "Not financial advice. Market alerts only."
 
 
-def _template_alert(alert: dict, voice_mode: str = "clean_retail") -> str:
+def normalize_voice_mode(voice_mode: str | None) -> str:
+    """Map public signup labels to the internal writer modes."""
+    normalized = (voice_mode or "").strip().lower().replace(" ", "_")
+    aliases = {
+        "twin": "atl_homie",
+        "atl_homie": "atl_homie",
+        "market_homie": "atl_homie",
+        "normal_clanka": "professional",
+        "professional": "professional",
+        "clean_retail": "professional",
+    }
+    return aliases.get(normalized, "atl_homie")
+
+
+def _template_alert(alert: dict, voice_mode: str = "normal_clanka") -> str:
+    voice_mode = normalize_voice_mode(voice_mode)
     symbol = alert["symbol"]
     score = alert["score"]
     priority = alert["priority"]
+    reason = alert.get("reason", "")
 
     if voice_mode == "professional":
         message = (
@@ -20,9 +36,17 @@ def _template_alert(alert: dict, voice_mode: str = "clean_retail") -> str:
             f"Confluence: {score}/10. Don't chase blind."
         )
     elif voice_mode == "atl_homie":
+        setup = "motion on the tape"
+        if "news catalyst" in reason:
+            setup = "news got the tape hollerin"
+        elif "unusual volume" in reason:
+            setup = "volume came through loud"
+        elif "high volatility" in reason:
+            setup = "volatility jumpin off"
         message = (
-            f"Aye, {symbol} turnin up. Price got motion, volume talkin, catalyst might be in the mix. "
-            f"Score: {score}/10. Don't chase, stay sharp."
+            f"Twin, get off yo ass and lock in. No excuse mode. {symbol} got motion. "
+            f"{setup.capitalize()}, score sittin at {score}/10. "
+            "Bag discipline only, no soft chasing."
         )
     else:
         message = (
@@ -33,7 +57,7 @@ def _template_alert(alert: dict, voice_mode: str = "clean_retail") -> str:
     return f"{message} {DISCLAIMER}"
 
 
-def rewrite_alert_with_llm(alert: dict, voice_mode: str = "clean_retail") -> str | None:
+def rewrite_alert_with_llm(alert: dict, voice_mode: str = "normal_clanka") -> str | None:
     """Optional future LLM rewrite hook.
 
     Keep this disabled for the local MVP. When enabled later, pass the structured
@@ -46,8 +70,9 @@ def rewrite_alert_with_llm(alert: dict, voice_mode: str = "clean_retail") -> str
     return None
 
 
-def generate_alert_text(alert: dict, voice_mode: str = "clean_retail") -> str:
+def generate_alert_text(alert: dict, voice_mode: str = "normal_clanka") -> str:
     """Generate short, SMS-friendly alert copy."""
+    voice_mode = normalize_voice_mode(voice_mode)
     llm_text = rewrite_alert_with_llm(alert, voice_mode)
     if llm_text:
         text = llm_text
