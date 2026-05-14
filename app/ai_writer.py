@@ -19,6 +19,11 @@ def _template_alert(alert: dict, voice_mode: str = "clean_retail") -> str:
             f"Aye, {symbol} heating up. Volume loud, price moving fast, and news may be adding fuel. "
             f"Confluence: {score}/10. Don't chase blind."
         )
+    elif voice_mode == "atl_homie":
+        message = (
+            f"Aye, {symbol} turnin up. Price got motion, volume talkin, catalyst might be in the mix. "
+            f"Score: {score}/10. Don't chase, stay sharp."
+        )
     else:
         message = (
             f"{symbol} is moving fast with stronger activity and a possible news catalyst. "
