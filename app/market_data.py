@@ -1,5 +1,7 @@
 import statistics
 import time
+from csv import DictReader
+from io import StringIO
 from typing import Any
 
 import requests
@@ -36,8 +38,10 @@ COINGECKO_IDS = {
 
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v2"
+STOOQ_QUOTE_URL = "https://stooq.com/q/l/"
 _LIVE_CACHE: dict[str, dict[str, Any]] = {}
 _CACHE_SECONDS = 60
+STOCK_SYMBOLS = {"SPY", "QQQ", "NVDA", "TSLA", "AMD", "AAPL", "META"}
 FOREX_PAIRS = {"EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", "USDCAD"}
 
 
@@ -51,6 +55,10 @@ def _is_crypto(symbol: str) -> bool:
 
 def _is_forex(symbol: str) -> bool:
     return symbol.upper() in FOREX_PAIRS
+
+
+def _is_stock(symbol: str) -> bool:
+    return symbol.upper() in STOCK_SYMBOLS
 
 
 def _split_forex_pair(symbol: str) -> tuple[str, str] | None:
@@ -201,6 +209,60 @@ def _get_live_forex_snapshot(symbol: str) -> dict[str, float | str] | None:
         return None
 
 
+def _get_live_stock_snapshot(symbol: str) -> dict[str, float | str] | None:
+    """Try free Stooq quote CSV data, returning None if anything fails.
+
+    This is delayed quote data, not a premium real-time market feed. Volume
+    scoring uses the raw quote volume as context while the volume multiple stays
+    mocked until a historical average or paid provider is added.
+    """
+    symbol = symbol.upper()
+    if not _is_stock(symbol):
+        return None
+
+    cached = _LIVE_CACHE.get(symbol)
+    if cached and time.time() - cached["fetched_at"] < _CACHE_SECONDS:
+        return cached["snapshot"]
+
+    try:
+        response = requests.get(
+            STOOQ_QUOTE_URL,
+            params={"s": f"{symbol.lower()}.us", "f": "sd2t2ohlcv", "h": "", "e": "csv"},
+            timeout=8,
+        )
+        response.raise_for_status()
+        rows = list(DictReader(StringIO(response.text)))
+        if not rows:
+            return None
+
+        quote = rows[0]
+        close_price = float(quote["Close"])
+        open_price = float(quote["Open"])
+        high_price = float(quote["High"])
+        low_price = float(quote["Low"])
+        raw_volume = int(float(quote["Volume"]))
+        mock = _symbol_data(symbol)
+
+        price_change = _percent_change(open_price, close_price)
+        intraday_range = _percent_change(open_price, high_price) - _percent_change(open_price, low_price)
+        snapshot = {
+            "symbol": symbol,
+            "price": round(close_price, 4),
+            "price_change": round(price_change, 2),
+            "volume_change": mock["volume_change"],
+            "volatility": round(min(3.0, abs(intraday_range)), 2),
+            "raw_volume": raw_volume,
+            "quote_date": quote["Date"],
+            "quote_time": quote["Time"],
+            "data_source": "stooq",
+        }
+        _LIVE_CACHE[symbol] = {"fetched_at": time.time(), "snapshot": snapshot}
+        return snapshot
+    except Exception as exc:
+        print(f"Stooq stock data unavailable for {symbol}: {exc}. Using mock data.")
+        return None
+
+
 def _get_mock_snapshot(symbol: str) -> dict[str, float | str]:
     symbol = symbol.upper()
     data = _symbol_data(symbol)
@@ -255,6 +317,11 @@ def get_market_snapshot(symbol: str) -> dict[str, float | str]:
         if live_snapshot:
             return live_snapshot
 
-    # Stock data stays mocked for now. Finnhub, Twelve Data, Polygon, or IEX
-    # Cloud can be added here when a stock-data API key is selected.
+    if _is_stock(symbol):
+        live_snapshot = _get_live_stock_snapshot(symbol)
+        if live_snapshot:
+            return live_snapshot
+
+    # Finnhub, Twelve Data, Polygon, or IEX Cloud can replace this free-data
+    # path when a production-grade stock data API key is selected.
     return _get_mock_snapshot(symbol)
