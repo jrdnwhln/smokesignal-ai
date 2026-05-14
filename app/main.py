@@ -27,6 +27,7 @@ from app.intelligence import (
     run_autonomous_cycle,
 )
 from app.market_reader import read_market
+from app.market_senses import build_market_senses
 from app.models import SubscribeRequest, TestSmsRequest, UserCreate
 from app.news_scanner import get_recent_articles
 from app.scheduler import run_hourly_update_once, scan_all_once, start_hourly_sms_scheduler
@@ -201,6 +202,11 @@ def news(symbol: str) -> dict:
 @app.get("/market/read")
 def market_read(voice_mode: str = "normal_clanka") -> dict:
     return read_market(voice_mode)
+
+
+@app.get("/market/senses")
+def market_senses(voice_mode: str = "normal_clanka") -> dict:
+    return build_market_senses(voice_mode)
 
 
 @app.get("/strategies")
