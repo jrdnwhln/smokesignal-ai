@@ -6,9 +6,11 @@ SmokeSignal AI is a local desktop backend prototype for an AI-powered market ale
 
 - Tracks a default watchlist of stocks and crypto.
 - Pulls live crypto market data from CoinGecko when available.
+- Pulls live forex reference rates from Frankfurter when available.
 - Falls back to mock market data if a live data source is unavailable.
 - Pulls mock news headlines.
 - Scores price movement, volume, volatility, news catalysts, and sentiment.
+- Tracks stocks, crypto, and major forex pairs.
 - Generates alert text in Professional, Clean Retail, Market Homie, or ATL Homie voice.
 - Saves alerts to a local SQLite database.
 - Prints alerts to the terminal.
@@ -61,7 +63,7 @@ copy .env.example .env
 
 ## Configure `.env`
 
-The MVP runs without API keys. Crypto data tries CoinGecko first, then falls back to mock data. Stock data and news are still mock-first.
+The MVP runs without API keys. Crypto data tries CoinGecko first, forex rates try Frankfurter first, then both fall back to mock data. Stock data and news are still mock-first.
 
 ```env
 APP_ENV=development
@@ -130,6 +132,12 @@ Try ATL Homie voice:
 http://127.0.0.1:8000/scan/BTC?voice_mode=atl_homie
 ```
 
+Scan a forex pair:
+
+```text
+http://127.0.0.1:8000/scan/EURUSD?voice_mode=atl_homie
+```
+
 ## Test Alert Generation
 
 Run tests:
@@ -170,11 +178,11 @@ SMS should never be sent to users who have not opted in. The MVP saves and print
 
 ### Phase 1
 
-Local mock data MVP plus live crypto data fallback.
+Local mock data MVP plus live crypto and forex rate fallback.
 
 ### Phase 2
 
-Connect real crypto data.
+Deepen real crypto data with better intraday candles and exchange-volume checks.
 
 ### Phase 3
 
