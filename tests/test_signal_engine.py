@@ -1,3 +1,4 @@
+from app.ai_writer import generate_alert_text
 from app.signal_engine import calculate_confluence_score, get_priority
 
 
@@ -30,3 +31,10 @@ def test_should_alert_only_for_watch_or_high_priority():
 
     if quiet_alert["priority"] == "NO ALERT":
         assert quiet_alert["should_alert"] is False
+
+
+def test_atl_homie_voice_includes_disclaimer():
+    alert = calculate_confluence_score("NVDA")
+    text = generate_alert_text(alert, "atl_homie")
+    assert "turnin up" in text
+    assert "Not financial advice. Market alerts only." in text
