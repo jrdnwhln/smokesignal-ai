@@ -1,5 +1,5 @@
-from app.ai_writer import generate_alert_text
 from app.signal_engine import calculate_confluence_score, get_priority
+from app.ai_writer import generate_alert_text
 
 
 def test_score_is_between_0_and_10():
@@ -38,3 +38,9 @@ def test_atl_homie_voice_includes_disclaimer():
     text = generate_alert_text(alert, "atl_homie")
     assert "turnin up" in text
     assert "Not financial advice. Market alerts only." in text
+
+
+def test_forex_symbol_returns_forex_asset_type():
+    alert = calculate_confluence_score("EURUSD")
+    assert alert["asset_type"] == "forex"
+    assert 0 <= alert["score"] <= 10
