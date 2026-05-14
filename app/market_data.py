@@ -19,6 +19,12 @@ MOCK_MARKET_DATA = {
     "ETH": {"price": 3425.20, "price_change": 1.1, "volume_change": 1.7, "volatility": 1.5},
     "SOL": {"price": 171.80, "price_change": 3.2, "volume_change": 2.9, "volatility": 2.7},
     "XRP": {"price": 0.58, "price_change": -0.8, "volume_change": 1.3, "volatility": 1.2},
+    "EURUSD": {"price": 1.08, "price_change": 0.18, "volume_change": 1.4, "volatility": 0.9},
+    "GBPUSD": {"price": 1.27, "price_change": -0.22, "volume_change": 1.5, "volatility": 1.0},
+    "USDJPY": {"price": 156.20, "price_change": 0.35, "volume_change": 1.8, "volatility": 1.2},
+    "USDCHF": {"price": 0.91, "price_change": -0.15, "volume_change": 1.2, "volatility": 0.8},
+    "AUDUSD": {"price": 0.66, "price_change": 0.28, "volume_change": 1.6, "volatility": 1.1},
+    "USDCAD": {"price": 1.36, "price_change": -0.19, "volume_change": 1.3, "volatility": 0.9},
 }
 
 COINGECKO_IDS = {
@@ -29,8 +35,10 @@ COINGECKO_IDS = {
 }
 
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
+FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v2"
 _LIVE_CACHE: dict[str, dict[str, Any]] = {}
 _CACHE_SECONDS = 60
+FOREX_PAIRS = {"EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", "USDCAD"}
 
 
 def _symbol_data(symbol: str) -> dict[str, float]:
@@ -39,6 +47,17 @@ def _symbol_data(symbol: str) -> dict[str, float]:
 
 def _is_crypto(symbol: str) -> bool:
     return symbol.upper() in COINGECKO_IDS
+
+
+def _is_forex(symbol: str) -> bool:
+    return symbol.upper() in FOREX_PAIRS
+
+
+def _split_forex_pair(symbol: str) -> tuple[str, str] | None:
+    symbol = symbol.upper().replace("/", "")
+    if len(symbol) != 6:
+        return None
+    return symbol[:3], symbol[3:]
 
 
 def _percent_change(old_value: float, new_value: float) -> float:
@@ -142,6 +161,46 @@ def _get_live_crypto_snapshot(symbol: str) -> dict[str, float | str] | None:
         return None
 
 
+def _get_live_forex_snapshot(symbol: str) -> dict[str, float | str] | None:
+    """Try Frankfurter reference FX rates, returning None if anything fails.
+
+    Forex spot volume is decentralized, so the MVP keeps volume and short-term
+    volatility as mock/proxy fields until a dedicated FX provider is selected.
+    """
+    symbol = symbol.upper().replace("/", "")
+    pair = _split_forex_pair(symbol)
+    if not pair:
+        return None
+
+    cached = _LIVE_CACHE.get(symbol)
+    if cached and time.time() - cached["fetched_at"] < _CACHE_SECONDS:
+        return cached["snapshot"]
+
+    base_currency, quote_currency = pair
+    try:
+        response = requests.get(
+            f"{FRANKFURTER_BASE_URL}/rate/{base_currency}/{quote_currency}",
+            timeout=8,
+        )
+        response.raise_for_status()
+        rate_data = response.json()
+        price = float(rate_data["rate"])
+        mock = _symbol_data(symbol)
+        snapshot = {
+            "symbol": symbol,
+            "price": round(price, 5),
+            "price_change": mock["price_change"],
+            "volume_change": mock["volume_change"],
+            "volatility": mock["volatility"],
+            "data_source": "frankfurter",
+        }
+        _LIVE_CACHE[symbol] = {"fetched_at": time.time(), "snapshot": snapshot}
+        return snapshot
+    except Exception as exc:
+        print(f"Frankfurter FX data unavailable for {symbol}: {exc}. Using mock data.")
+        return None
+
+
 def _get_mock_snapshot(symbol: str) -> dict[str, float | str]:
     symbol = symbol.upper()
     data = _symbol_data(symbol)
@@ -188,6 +247,11 @@ def get_market_snapshot(symbol: str) -> dict[str, float | str]:
     symbol = symbol.upper()
     if _is_crypto(symbol):
         live_snapshot = _get_live_crypto_snapshot(symbol)
+        if live_snapshot:
+            return live_snapshot
+
+    if _is_forex(symbol):
+        live_snapshot = _get_live_forex_snapshot(symbol)
         if live_snapshot:
             return live_snapshot
 
