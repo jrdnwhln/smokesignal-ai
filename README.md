@@ -22,6 +22,7 @@ SmokeSignal AI is a local desktop backend prototype for an AI-powered market ale
 - Stores strategy observations locally so methods can be graded against future outcomes.
 - Reads the full market board and classifies the tape as risk-on, risk-off, chop, catalyst-driven, volatility expansion, or mixed.
 - Adds alternative market senses for breadth, crash pressure, gain pressure, uncertainty, dollar stress, leadership concentration, risk appetite divergence, and news theme clustering.
+- Replies when users text the Twilio webhook with commands like `SCAN NVDA`, `MARKET`, `SENSES`, `STATUS`, `TWIN`, `NORMAL`, `PAUSE`, or `RESUME`.
 - Saves alerts to a local SQLite database.
 - Prints alerts to the terminal.
 - Provides FastAPI routes for local testing.
@@ -275,6 +276,17 @@ Inbound opt-out words are handled by `POST /sms/webhook`:
 - `UNSUBSCRIBE`
 - `CANCEL`
 - `QUIT`
+
+Inbound conversational commands are also handled:
+
+- `SCAN NVDA` or any supported symbol
+- `MARKET`
+- `SENSES`
+- `STATUS`
+- `TWIN`
+- `NORMAL`
+- `PAUSE`
+- `RESUME`
 
 ## Why SMS Is Disabled by Default
 
