@@ -5,6 +5,7 @@ SmokeSignal AI is a local desktop backend prototype for an AI-powered market ale
 ## What SmokeSignal AI Does
 
 - Tracks a default watchlist of stocks and crypto.
+- Pulls free delayed stock quote data from Stooq when available.
 - Pulls live crypto market data from CoinGecko when available.
 - Pulls live forex reference rates from Frankfurter when available.
 - Falls back to mock market data if a live data source is unavailable.
@@ -63,7 +64,7 @@ copy .env.example .env
 
 ## Configure `.env`
 
-The MVP runs without API keys. Crypto data tries CoinGecko first, forex rates try Frankfurter first, then both fall back to mock data. Stock data and news are still mock-first.
+The MVP runs without API keys. Stock quotes try Stooq first, crypto data tries CoinGecko first, forex rates try Frankfurter first, then all fall back to mock data. News is still mock-first.
 
 ```env
 APP_ENV=development
@@ -118,6 +119,12 @@ Scan one symbol:
 
 ```text
 http://127.0.0.1:8000/scan/NVDA
+```
+
+Stock scans use free delayed quote data when available:
+
+```text
+http://127.0.0.1:8000/scan/NVDA?voice_mode=atl_homie
 ```
 
 Try a different voice mode:
@@ -178,11 +185,11 @@ SMS should never be sent to users who have not opted in. The MVP saves and print
 
 ### Phase 1
 
-Local mock data MVP plus live crypto and forex rate fallback.
+Local mock data MVP plus free stock quotes, live crypto data, and forex rate fallback.
 
 ### Phase 2
 
-Deepen real crypto data with better intraday candles and exchange-volume checks.
+Deepen real stock and crypto data with better intraday candles and volume-average checks.
 
 ### Phase 3
 
