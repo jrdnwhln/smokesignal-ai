@@ -2,6 +2,7 @@ from urllib.parse import parse_qs
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.ai_writer import generate_alert_text
 from app.alert_sender import process_alert, send_sms_alert
@@ -27,6 +28,7 @@ app = FastAPI(
     description="Local MVP market monitoring and alert engine. Not financial advice.",
     version="0.1.0",
 )
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.on_event("startup")
@@ -71,15 +73,24 @@ def subscribe_page() -> str:
           main {
             max-width: 560px;
             margin: 0 auto;
-            padding: 48px 20px;
+            padding: 32px 20px 48px;
+          }
+          .logo {
+            display: block;
+            width: min(360px, 82vw);
+            height: auto;
+            margin: 0 auto 20px;
+            border-radius: 8px;
           }
           h1 {
-            font-size: 34px;
+            font-size: 30px;
             margin-bottom: 8px;
+            text-align: center;
           }
           p {
             color: #cbd3dc;
             line-height: 1.5;
+            text-align: center;
           }
           form {
             display: grid;
@@ -116,6 +127,7 @@ def subscribe_page() -> str:
       </head>
       <body>
         <main>
+          <img class="logo" src="/static/smokesignal-logo.png" alt="SmokeSignal AI logo" />
           <h1>SmokeSignal AI</h1>
           <p>Subscribe to hourly market monitoring texts for stocks, crypto, and forex. Alerts are for education and monitoring only.</p>
           <form method="post" action="/subscribe">
