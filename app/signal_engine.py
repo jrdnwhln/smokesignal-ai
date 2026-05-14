@@ -1,5 +1,6 @@
 from app.market_data import get_market_snapshot
-from app.news_scanner import detect_news_catalyst, get_recent_headlines, score_news_sentiment
+from app.news_scanner import detect_news_catalyst, get_recent_articles, get_recent_headlines, score_news_sentiment
+from app.strategy_engine import evaluate_strategies
 
 
 DEFAULT_WATCHLIST = {
@@ -85,6 +86,7 @@ def calculate_confluence_score(symbol: str) -> dict:
     """Calculate a 0-10 alert score from price, volume, volatility, news, and sentiment."""
     symbol = symbol.upper()
     snapshot = get_market_snapshot(symbol)
+    articles = get_recent_articles(symbol)
     headlines = get_recent_headlines(symbol)
     has_catalyst = detect_news_catalyst(symbol)
 
@@ -101,7 +103,7 @@ def calculate_confluence_score(symbol: str) -> dict:
     total_score = max(0.0, min(10.0, total_score))
     priority = get_priority(total_score)
 
-    return {
+    alert = {
         "symbol": symbol,
         "asset_type": get_asset_type(symbol),
         "score": total_score,
@@ -110,6 +112,7 @@ def calculate_confluence_score(symbol: str) -> dict:
         "should_alert": priority in {"WATCH", "HIGH PRIORITY"},
         "market_snapshot": snapshot,
         "headlines": headlines,
+        "articles": articles,
         "component_scores": {
             "price_movement": price_score,
             "volume": volume_score,
@@ -118,3 +121,5 @@ def calculate_confluence_score(symbol: str) -> dict:
             "sentiment": sentiment_score,
         },
     }
+    alert["strategies"] = evaluate_strategies(alert)
+    return alert
