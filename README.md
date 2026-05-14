@@ -79,6 +79,8 @@ TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_PHONE_NUMBER=
 SMS_ENABLED=false
+
+HOURLY_UPDATES_ENABLED=false
 ```
 
 Keep `SMS_ENABLED=false` until users have clearly opted in and Twilio is fully configured.
@@ -99,6 +101,12 @@ Open local docs:
 
 ```text
 http://127.0.0.1:8000/docs
+```
+
+Open the SMS subscription page:
+
+```text
+http://127.0.0.1:8000/subscribe
 ```
 
 ## Test `/scan`
@@ -158,6 +166,31 @@ You can also generate alerts through:
 - `GET /scan`
 - `GET /scan/{symbol}`
 - `GET /alerts`
+
+## SMS Subscription Flow
+
+Users can subscribe from:
+
+```text
+http://127.0.0.1:8000/subscribe
+```
+
+The form creates or updates a local user, opts them into SMS, seeds the default watchlist, and sends a welcome text only when Twilio and `SMS_ENABLED=true` are configured.
+
+Useful routes:
+
+- `POST /subscribe`
+- `POST /unsubscribe`
+- `GET /users`
+- `GET /users/{user_id}/watchlist`
+- `POST /hourly-update`
+- `POST /scheduler/hourly/start`
+
+`POST /hourly-update` runs one manual hourly digest in development. `POST /scheduler/hourly/start` starts the local hourly loop in development. To start it automatically when the app boots, set:
+
+```env
+HOURLY_UPDATES_ENABLED=true
+```
 
 ## Twilio SMS Later
 
