@@ -1,0 +1,1 @@
+SmokeSignal AI - local FastAPI MVP for mock-first stock and crypto market alerts.
