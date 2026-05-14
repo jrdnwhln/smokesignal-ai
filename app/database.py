@@ -135,7 +135,8 @@ def create_user(name: str, phone_number: str, sms_enabled: bool, voice_mode: str
             """,
             (name, phone_number, int(sms_enabled), voice_mode, utc_now()),
         )
-        row = conn.execute("SELECT * FROM users WHERE id = ?", (cursor.lastrowid,)).fetchone()
+        user_id = cursor.lastrowid
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
         return row_to_dict(row)
 
 
@@ -231,6 +232,15 @@ def set_user_sms_enabled(phone_number: str, enabled: bool) -> bool:
         return cursor.rowcount > 0
 
 
+def set_user_voice_mode(phone_number: str, voice_mode: str) -> bool:
+    with get_connection() as conn:
+        cursor = conn.execute(
+            "UPDATE users SET voice_mode = ? WHERE phone_number = ?",
+            (voice_mode, phone_number),
+        )
+        return cursor.rowcount > 0
+
+
 def save_alert(alert: dict[str, Any]) -> dict[str, Any]:
     with get_connection() as conn:
         cursor = conn.execute(
@@ -250,13 +260,17 @@ def save_alert(alert: dict[str, Any]) -> dict[str, Any]:
                 utc_now(),
             ),
         )
-        row = conn.execute("SELECT * FROM alerts WHERE id = ?", (cursor.lastrowid,)).fetchone()
+        alert_id = cursor.lastrowid
+        row = conn.execute("SELECT * FROM alerts WHERE id = ?", (alert_id,)).fetchone()
         return row_to_dict(row)
 
 
 def get_alerts(limit: int = 100) -> list[dict[str, Any]]:
     with get_connection() as conn:
-        rows = conn.execute("SELECT * FROM alerts ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
+        rows = conn.execute(
+            "SELECT * FROM alerts ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
         return [row_to_dict(row) for row in rows]
 
 
@@ -275,13 +289,17 @@ def save_intelligence_event(event_type: str, summary: str, symbol: str | None = 
 
 def get_intelligence_events(limit: int = 25) -> list[dict[str, Any]]:
     with get_connection() as conn:
-        rows = conn.execute("SELECT * FROM intelligence_events ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
+        rows = conn.execute(
+            "SELECT * FROM intelligence_events ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
         return [row_to_dict(row) for row in rows]
 
 
 def record_source_observation(source: str, symbol: str, is_catalyst: bool) -> None:
     if not source:
         return
+
     with get_connection() as conn:
         existing = conn.execute("SELECT * FROM source_memory WHERE source = ?", (source,)).fetchone()
         if existing:
