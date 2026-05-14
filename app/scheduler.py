@@ -8,7 +8,7 @@ from app.signal_engine import DEFAULT_WATCHLIST, calculate_confluence_score
 def scan_all_once(voice_mode: str = "clean_retail") -> list[dict]:
     """Run one scan across the default watchlist."""
     alerts = []
-    symbols = DEFAULT_WATCHLIST["stocks"] + DEFAULT_WATCHLIST["crypto"]
+    symbols = DEFAULT_WATCHLIST["stocks"] + DEFAULT_WATCHLIST["crypto"] + DEFAULT_WATCHLIST["forex"]
     for symbol in symbols:
         alert = calculate_confluence_score(symbol)
         alert_text = generate_alert_text(alert, voice_mode)
